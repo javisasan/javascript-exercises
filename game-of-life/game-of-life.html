@@ -1,0 +1,166 @@
+<html>
+    <head>
+        <style>
+            body {
+                background-color: #111;
+                color: #afa;
+            }
+            table {
+                border-top: 1px solid #141;
+                border-left: 1px solid #141;
+                border-spacing: 0px;
+                border-collapse: separate;
+            }
+            td {
+                border-right: 1px solid #141;
+                border-bottom: 1px solid #141;
+                padding: 3px;
+            }
+            .dead {
+                background: transparent;
+            }
+            .alive {
+                background: #5c5;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <h1>Conway's Game Of Life</h1>
+        <label for="grid-size">Grid Size (<span id="grid-size-lbl">220</span>)</label>
+        <input type="range" min="6" max="200" value="220" id="grid-size" step="2" />
+        <input type="button" id="start" value="Start" />
+        <table id="gol-grid"></table>
+    </body>
+
+    <script language="javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            const gridSize = document.getElementById("grid-size");
+            const gridSizeLabel = document.getElementById("grid-size-lbl");
+            const start = document.getElementById("start");
+
+            gridSize.addEventListener('input', function() {
+                gridSizeLabel.innerHTML = gridSize.value;
+            });
+
+            start.addEventListener('mouseup', function() {
+                drawGrid(gridSize.value);
+                gameLoop(gridSize.value);
+            });
+
+            drawGrid(gridSize.value);
+        });
+
+        function drawGrid(size) {
+            const golGrid = document.getElementById("gol-grid");
+            golGrid.innerHTML = '';
+            let cellId = 0;
+            for (i = 0 ; i < size/2 ; i++) {
+                let row = document.createElement('tr');
+                for (j = 0 ; j < size ; j ++) {
+                    let col = document.createElement('td');
+                    col.setAttribute("id", "cell" + cellId);
+                    row.appendChild(col);
+                    cellId++;
+                }
+                golGrid.appendChild(row);
+            }
+        }
+
+        function gameLoop(size) {
+            let cells = [];
+            for (i = 0 ; i < (size * (size/2)) ; i++) {
+                isAlive = (Math.floor(Math.random() * 2) + 1) == 2;
+                cells[i] = isAlive;
+            }
+
+            for (i = 0 ; i < (size * (size/2)) ; i++) {
+                document.getElementById("cell" + i).className = cells[i] ? "alive" : "dead";
+            }
+
+            let it = 0
+            console.log('start');
+            console.log(cells.length);
+            setInterval(function(){
+                cells = redraw(size, cells);
+            }, 100);
+        }
+
+        function redraw(size, cells) {
+            let cellsNew = [];
+            cells.forEach(function (element, id) {
+                id = parseInt(id);
+                let isLeftLimit = (id == 0) || id / size == 1;
+                let isRightLimit = (parseInt(id)+ 1) / size == 1;
+                let neighbours = 0;
+
+                // Left neighbour
+                if (cells[id - 1] == true && !isLeftLimit) {
+                    neighbours++;
+                }
+                // Right neighbour
+                if (cells[parseInt(id) + 1] == true && !isRightLimit) {
+                    neighbours++;
+                }
+                // Upper neighbours
+                let un = id - size;
+                if (un >= 0) {
+                    // Upper
+                    if (cells[un] == true) {
+                        neighbours++;
+                    }
+                    // Upper Left
+                    if (!isLeftLimit && cells[un - 1] == true) {
+                        neighbours++;
+                    }
+                    // Upper Right
+                    if (!isRightLimit && cells[parseInt(un) + 1] == true) {
+                        neighbours++;
+                    }
+                }
+                // Lower neighbours
+                un = parseInt(id) + parseInt(size);
+                if (un <= cells.length) {
+                    // Lower
+                    if (cells[un] == true) {
+                        neighbours++;
+                    }
+                    // Lower Left
+                    if (!isLeftLimit && cells[un - 1] == true) {
+                        neighbours++;
+                    }
+                    // Lower Right
+                    if (!isRightLimit && cells[parseInt(un) + 1] == true) {
+                        neighbours++;
+                    }
+                }
+                
+                let newCellStatus = false;
+                // Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+                // Any live cell with more than three live neighbours dies, as if by overpopulation.
+                if (neighbours < 2 || neighbours > 3) {
+                    newCellStatus = false;
+                }
+                // Any live cell with two or three live neighbours lives on to the next generation.
+                if (cells[id] == true && (neighbours == 2 || neighbours == 3)) {
+                    newCellStatus = true;
+                }
+                // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+                if (neighbours == 3) {
+                    newCellStatus = true;
+                }
+
+                cellsNew[id] = newCellStatus;
+            });
+
+            cells = [...cellsNew];
+
+            for (i = 0 ; i < (size * (size/2)) ; i++) {
+                document.getElementById("cell" + i).className = cells[i] ? "alive" : "dead"
+            }
+
+            return cells;
+        }
+    </script>
+</html>
